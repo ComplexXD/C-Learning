@@ -1,5 +1,9 @@
+
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/timeb.h>
 
 #define DLL_BEFORE 0
 #define DLL_AFTER  1
@@ -75,13 +79,11 @@ listelem* dll_remove(listelem *a)
     b->next_number = c;
     if (c)
         c->previous_number = b;
-    free(a);
-
-
+    // free(a);
     return b;
 }
 
-listelem *dll_first_number(listelem *a)
+listelem *dll_get_first_pos(listelem *a)
 {
     while(dll_previous(a) != NULL)
        a = dll_previous(a); 
@@ -99,26 +101,11 @@ int dll_get_value(listelem *a)
     return a->number;
 }
 
-int dll_delete_list(listelem *a)
-{   
-    if (!a)
-        return 0;
-
-    listelem *pos;
-    pos = dll_first_number(a);
-    while(pos != NULL)
-    {
-        dll_remove(pos);
-        pos = dll_first_number(a);
-    }
-    free(a->previous_number);
-    return 0;
-}
 
 int dll_count(listelem *a) 
 {
    int i = 0;
-    listelem *pos = dll_first_number(a);
+    listelem *pos = dll_get_first_pos(a);
     while(pos)
     {
         i++;
@@ -167,26 +154,76 @@ int dll_is_empty(listelem *a_list)
         return 0;
 }
 
+int dll_delete_list(listelem *a_list)
+{   
+    listelem *pos;
+    while(!dll_is_empty(a_list))
+    {
+        pos = dll_get_first_pos(a_list);
+        dll_remove(pos);
+    }
+    free(a_list);
+    return 0;
+}
+
+
+void dll_out_list(listelem *a)
+{
+    if(dll_is_empty(a))
+    {
+        printf("[]");
+        return;
+    }
+    int place = 1;
+    a = dll_get_first_pos(a);
+    printf("[");
+    while(a) 
+    {
+        printf("%d ",dll_get_value(a));
+        a = dll_next(a);
+        place++;
+    }
+    printf("] ");
+    return;
+}
+
+
+listelem *dll_split(listelem *a_list)
+{
+    int half = (dll_count(a_list) -1) / 2;
+    int i;
+
+    listelem *pos = dll_get_first_pos(a_list);
+    for(i = 0; i <= half; i++) 
+    {
+        pos = dll_next(pos);
+    }   
+    listelem *newhead = dll_create();
+    newhead->next_number = pos;
+    if (pos) {
+        dll_previous(pos)->next_number = NULL;
+        pos->previous_number = newhead;
+    }
+    return newhead;
+}
 
 
 void dll_merge(listelem *a_list, listelem *b_list) //merge list b into a. // a and b must be sorted
 {
-    listelem *a = dll_first_number(a_list); //position a on first number
-    listelem *b = dll_first_number(b_list); // position b on header
+    listelem *a = dll_get_first_pos(a_list); //position a on first number
+    listelem *b = dll_get_first_pos(b_list); // position b on header
 
+   
     if(dll_is_empty(b_list))                     // if b is empty, dont do shit
         return;
-
-    printf("Checking list for emptyness\n");    
+  
     if (dll_is_empty(a_list)) {
-        printf("List is empty");
-        dll_add(a_list, a, dll_get_value(b), DLL_AFTER);
-        if (dll_is_last(b))
+        a = dll_add(a_list, a, dll_get_value(b), DLL_AFTER);
+        if (dll_is_last(b)) {
             return;
+        }
         b = dll_next(b);
     }
-    printf("List is not empy\n");
-
 
     while(1)
     {
@@ -219,7 +256,7 @@ void dll_print_list(listelem *a, char* listname)
         return;
     }
     int place = 1;
-    a = dll_first_number(a);
+    a = dll_get_first_pos(a);
     printf("\n");
     while(a) 
     {
@@ -231,9 +268,34 @@ void dll_print_list(listelem *a, char* listname)
     return;
 }
 
+
+
 listelem* dll_get_head(listelem *a)
 {
-    a = dll_first_number(a);
+    a = dll_get_first_pos(a);
     a = dll_previous(a);   
     return a;
+}
+
+listelem * dll_sort(listelem *a_list)
+{
+    listelem *b_list;
+
+    if(dll_is_empty(a_list))
+        return a_list;
+    if(dll_count(a_list) == 1)
+        return a_list;
+    
+    b_list = dll_split(a_list);
+
+    dll_sort(a_list);
+    dll_sort(b_list);
+
+    dll_merge(a_list, b_list);
+
+    dll_delete_list(b_list);
+
+    return a_list;
+
+
 }
