@@ -1,9 +1,9 @@
-
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/timeb.h>
+
 
 #define DLL_BEFORE 0
 #define DLL_AFTER  1
@@ -308,6 +308,10 @@ int main(void)
 {
     printf("Starting...\n");
 
+    int i = 0;
+    unsigned int max = 1;
+    double time_used;
+    clock_t start, end;
     time_t t;
     srand((unsigned) time(&t));
     
@@ -316,17 +320,20 @@ int main(void)
     listelem *a = NULL; 
     listelem *b = NULL;
 
-    int i;
-
-    for(i=0;i<=1000000;i++)
-        a = dll_add(list_a, a, rand() % 1000, DLL_AFTER);
+    start = clock();
+    printf("Creating %d numbers:\n", max);
+    for(i;i <= max; i++)
+        a = dll_add(list_a, a, rand() % 10000, DLL_AFTER);
     
     dll_sort(list_a);
-
-    dll_out_list(list_a);
+    printf("Sorting List\n");
+    //dll_out_list(list_a);
     dll_delete_list(list_a);
-    printf("Done");
-
+    printf("Deleating list\n");
+    printf("Done\n");
+    end = clock();
+    time_used = ((double) (end - start ) / CLOCKS_PER_SEC);
+    printf("Time used: %lf seconds\n", time_used);
 
     return 0;
 }
